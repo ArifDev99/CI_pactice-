@@ -199,13 +199,14 @@ jobs:
           cd frappe-bench/
           bench new-site --db-root-password root --admin-password admin test_site
           bench use test_site
-        
-      - name: Install
-        run: |
           bench start
-          bench build
-        env:
-          CI: 'Yes'
+        
+    #   - name: Install
+    #     run: |
+    #       bench start
+    #       bench build
+    #     env:
+    #       CI: 'Yes'
 
       # - name: Run Tests
       #   working-directory: /home/runner/frappe-bench
