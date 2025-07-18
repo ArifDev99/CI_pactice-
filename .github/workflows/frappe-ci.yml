@@ -202,7 +202,6 @@ jobs:
         run: |
           bench new-site --db-root-password root --admin-password admin test_site
           bench --site test_site install-app frappe
-          bench --site test_site install-app frappe
           bench start
           bench build
         env:
