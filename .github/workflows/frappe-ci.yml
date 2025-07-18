@@ -195,7 +195,7 @@ jobs:
       - name: setup frappe
         run: |
           sudo -H pip3 install frappe-bench
-          bench init frappe-bench --frappe-branch version-15 --python python3.11
+          bench init frappe-bench --frappe-branch version-15 --python python3
           cd frappe-bench/
           bench new-site test_site
           bench use test_site
