@@ -1,0 +1,98 @@
+name: Frappe CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10"]
+        
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        ports:
+          - 3306:3306
+          
+      redis:
+        image: redis:alpine
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          git build-essential python3-setuptools python3-dev \
+          libffi-dev python3-pip libssl-dev libtiff5-dev \
+          libmariadb-dev-compat libmariadb-dev \
+          redis-tools libmysqlclient-dev
+          
+    - name: Install bench
+      run: |
+        pip install frappe-bench
+        
+    - name: Initialize bench
+      run: |
+        bench init --skip-redis-config-generation --frappe-branch version-14 frappe-bench
+        cd frappe-bench
+        
+    - name: Create test site
+      run: |
+        cd frappe-bench
+        bench new-site test_site --admin-password admin --db-root-password root
+        bench --site test_site install-app frappe
+        
+    - name: Install custom app (if exists)
+      run: |
+        cd frappe-bench
+        if [ -d "../frappe-app-example" ]; then
+          bench get-app ../frappe-app-example
+          bench --site test_site install-app frappe_app_example
+        fi
+        
+    - name: Run tests
+      run: |
+        cd frappe-bench
+        bench --site test_site run-tests --coverage
+        
+    - name: Code quality checks
+      run: |
+        cd frappe-bench
+        # Run linting on custom apps
+        if [ -d "apps/frappe_app_example" ]; then
+          cd apps/frappe_app_example
+          python -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          python -m flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
+        fi 
