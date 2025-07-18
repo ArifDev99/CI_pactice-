@@ -196,7 +196,9 @@ jobs:
           sudo -H pip3 install frappe-bench
           bench init --skip-assets frappe-bench --frappe-branch version-15 --python python3
           cd frappe-bench/
-
+          pwd
+          ls apps/
+          bench get-app cn_todo_manager $GITHUB_WORKSPACE
           sed -i 's/watch:/# watch:/g' Procfile
           sed -i 's/schedule:/# schedule:/g' Procfile
           sed -i 's/socketio:/# socketio:/g' Procfile
@@ -204,8 +206,10 @@ jobs:
 
           bench new-site --db-root-password root --admin-password admin test_site
           bench use test_site
+          bench install-app cn_todo_manager
           bench setup requirements --dev
           bench start & CI=Yes
+          
         
     #   - name: Install
     #     run: |
@@ -223,7 +227,7 @@ jobs:
       #     TYPE: server
 
       - name: Install Playwright Deps
-        working-directory: /home/runner/frappe-bench/apps/cn_todo_manager
+        # working-directory: 
         run: |
           yarn install
           yarn playwright install --with-deps
