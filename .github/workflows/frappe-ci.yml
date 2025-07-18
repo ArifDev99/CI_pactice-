@@ -61,11 +61,15 @@ jobs:
           
     - name: Install bench
       run: |
-        pip install frappe-bench
+        pip3 install frappe-bench
+    
+    - name: version
+      run: | 
+        bench --version
         
     - name: Initialize bench
       run: |
-        bench init --skip-redis-config-generation --frappe-branch version-14 frappe-bench
+        bench init frappe-bench --frappe-branch version-15
         cd frappe-bench
         
     - name: Create test site
