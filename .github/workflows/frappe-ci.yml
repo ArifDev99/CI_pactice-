@@ -194,14 +194,15 @@ jobs:
           sudo apt-get install yarn
       - name: setup frappe
         run: |
-          bench init frappe-bench --frappe-branch version-15 --yes
+          sudo -H pip3 install frappe-bench
+          bench init frappe-bench --frappe-branch version-15 --python python3.11
+          cd frappe-bench/
           bench new-site test_site
           bench use test_site
         
       - name: Install
         run: |
           bench new-site --db-root-password root --admin-password admin test_site
-          bench --site test_site install-app frappe
           bench start
           bench build
         env:
