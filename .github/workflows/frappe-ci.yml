@@ -192,12 +192,17 @@ jobs:
           sudo apt-get install python3-venv
           sudo apt-get install -y nodejs
           sudo apt-get install yarn
+      - name: setup frappe
+        run: |
+          bench init frappe-bench --frappe-branch version-15 --yes
+          bench new-site test_site
+          bench use test_site
         
       - name: Install
         run: |
-          pip3 install frappe-bench 
           bench new-site --db-root-password root --admin-password admin test_site
-          bench --site test_site install-app cn_todo_manager
+          bench --site test_site install-app frappe
+          bench --site test_site install-app frappe
           bench start
           bench build
         env:
