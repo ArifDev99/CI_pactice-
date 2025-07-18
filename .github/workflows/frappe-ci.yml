@@ -176,7 +176,8 @@ jobs:
       - name: Install MariaDB Client
         run: |
           sudo apt update
-          sudo apt-get install mariadb-client
+          sudo apt remove mysql-server mysql-client
+          sudo apt-get install mariadb-client libcups2-dev redis-server
 
       # - name: Setup
       #   run: |
@@ -186,8 +187,6 @@ jobs:
       #     mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
       - name: Setup Frappe Bench
         run: |
-          sudo apt-get install redis-server
-          sudo apt-get install mariadb-server
           sudo apt-get install python3-pip
           sudo apt-get install python3-venv
           sudo apt-get install -y nodejs
@@ -195,11 +194,18 @@ jobs:
       - name: setup frappe
         run: |
           sudo -H pip3 install frappe-bench
-          bench init frappe-bench --frappe-branch version-15 --python python3
+          bench init --skip-assets frappe-bench --frappe-branch version-15 --python python3
           cd frappe-bench/
+
+          sed -i 's/watch:/# watch:/g' Procfile
+          sed -i 's/schedule:/# schedule:/g' Procfile
+          sed -i 's/socketio:/# socketio:/g' Procfile
+          sed -i 's/redis_socketio:/# redis_socketio:/g' Procfile
+
           bench new-site --db-root-password root --admin-password admin test_site
           bench use test_site
-          bench start
+          bench setup requirements --dev
+          bench start & CI=Yes
         
     #   - name: Install
     #     run: |
